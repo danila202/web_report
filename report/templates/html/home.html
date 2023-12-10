@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <form action="{% url 'report:home' %}" method="post">
+           {% csrf_token %}
+     <div>
+         <label for="{{ form.marking.id_for_label }}">
+         </label>
+                    {{ form.marking }}
+     </div>
+
+        <button type="submit" src="{% url 'report:home' %}">Создать отчет</button>
+</form>
+
+</body>
+</html>

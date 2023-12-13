@@ -98,6 +98,7 @@ class Transport(models.Model):
     load_zo = models.FloatField()
     height = models.FloatField()
 
+
     class Meta:
         db_table = 'тс'
 

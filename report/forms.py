@@ -1,12 +1,18 @@
 from .models import Fence
+from django_select2 import forms as s2forms
 from django import forms
 
 
-class FencingForm(forms.Form):
+
+class FenceWidget(s2forms.ModelSelect2Widget):
+    search_fields = [
+        'marking_icontains',
+    ]
+
+class FencingForm(forms.ModelForm):
 
     class Meta:
         model = Fence
         fields = ['marking']
 
-    marking = forms.CharField(widget=forms.TextInput(attrs={
-        'class': 'form-control py-4', 'placeholder': 'Введите ограждение'}))
+        widgets = {'fence': FenceWidget}

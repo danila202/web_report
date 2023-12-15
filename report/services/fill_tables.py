@@ -1,11 +1,8 @@
+from docx.shared import Pt
+
 from report.models import Element, Fence, TestParameter, Transport
 
-from docx import Document
-
-from docx.shared import Pt
 from .fill_first_page import FistPage, doc
-
-
 
 
 class Table:
@@ -32,8 +29,8 @@ class Table:
         fence_retention = Fence.objects.get(marking=FistPage.get_fence().marking).retention_capacity
 
         table3 = cls.all_table[2]
-        row1, row2, row3 = table3.rows[1], table3.rows[2], table3.rows[3]
-        row1.cells[1].text, row2.cells[1].text, row3.cells[1].text = 'кДж', 'м', 'м'
+        row1, row2, row3, row4 = table3.rows[1], table3.rows[2], table3.rows[3], table3.rows[4]
+        row1.cells[1].text, row2.cells[1].text, row3.cells[1].text, row4.cells[1].text = 'кДж', 'м', 'м', 'кт'
 
         #Заполенение 1 строки
         ud = cls.result.get(parameter_id="Удерживающая способ")
@@ -61,6 +58,12 @@ class Table:
             row3.cells[3].text = f'{work_width[1].actual_value}'
         row3.cells[4].text = f'{round(work_width[0].actual_value - work_width[1].actual_value,2)}%'
 
+        # Заполнение 4 строчки
+        index = cls.result.get(parameter_id='И автобуса')
+        row4.cells[2].text = f'{index.actual_value}'
+        row4.cells[3].text = f'{index.actual_value}'
+        row4.cells[4].text = f'{round(index.actual_value - index.actual_value, 2)}%'
+
         cls.save_file()
 
     @classmethod
@@ -70,21 +73,24 @@ class Table:
 
         # Заполнение 3 строки
         validation = cls.result.get(parameter_id='Валидация')
-        row3.cells[1].text = f'{validation.actual_value}%'
-        row3.cells[2].text = 'Соответствует'
+        if validation.actual_value !=0:
+            row3.cells[1].text = f'{validation.actual_value}%'
+            row3.cells[2].text = 'Соответствует'
 
         # Заполнение 6 строки
         node = cls.result.get(parameter_id='УзлыКрепления')
-        row6.cells[1].text = f'{node.actual_value}'
-        row6.cells[2].text = 'Соответствует'
+        if node.actual_value != 0:
+            row6.cells[1].text = f'{node.actual_value}'
+            row6.cells[2].text = 'Соответствует'
 
         # Заполнение 10 строки
+
         alteration = cls.result.get(parameter_id="ИзменениеКонстр")
         row10.cells[1].text = f'{alteration.actual_value}'
         row10.cells[2].text = 'Соответствует'
 
         cls.save_file()
-        ## Дописать логику заполения
+
 
 
     @classmethod
@@ -101,6 +107,16 @@ class Table:
         row7.cells[1].text, row7.cells[2].text = str(ts_data[0].load_po), str(ts_data[1].load_po)
         row8.cells[1].text, row8.cells[2].text = str(ts_data[0].load_zo), str(ts_data[1].load_zo)
         row9.cells[1].text, row9.cells[2].text = str(ts_data[0].height), str(ts_data[1].height)
+
+        p_bus = doc.paragraphs[50]
+        p_car = doc.paragraphs[52]
+        summ_bus = ts_data[0].width + (0.16*ts_data[0].length) + (0.22*20)
+        summ_car = ts_data[1].width + (0.16*ts_data[1].length) + (0.22*10)
+        run_bus = p_bus.add_run(f'{ts_data[0].width} + 0.16*{ts_data[0].length} + 0.22*20 = {summ_bus}м.')
+        run_cur = p_car.add_run(f'{ts_data[1].width} + 0.16*{ts_data[1].length} + 0.22*10 = {summ_car}м.')
+        run_bus.font.size = Pt(14)
+        run_cur.font.size = Pt(14)
+
 
         cls.save_file()
 
@@ -134,6 +150,18 @@ class Table:
             row7.cells[1].text = 'Автобус не получил серьезных повреждений'
             row7.cells[2].text = 'Легковой автомобиль не получил серьезных повреждений'
 
+        row8 = table6.rows[7]
+        ts_data = Transport.objects.filter(test__protocol__fence__id=FistPage.get_fence().id)
+        summ_bus = ts_data[0].width + (0.16 * ts_data[0].length) + (0.22 * 20)
+        summ_car = ts_data[1].width + (0.16 * ts_data[1].length) + (0.22 * 10)
+        row8.cells[1].text = f'K = {summ_bus}м. B = 20м.'
+        row8.cells[2].text = f'K = {summ_car}м. B = 10м.'
+        p = doc.paragraphs[35]
+        run = p.add_run(f'марки {FistPage.get_fence().marking} методом наезда автобусом массой {ts_data[0].mass} т '
+                        'со скоростью 67 км/ч и '\
+         f'методом наезда легковым автомобилем массой {ts_data[1].mass} т со скоростью 90 км/ч.')
+
+        run.font.size = Pt(14)
         cls.save_file()
 
 
@@ -185,6 +213,31 @@ class Table:
         row3, row4, row5 = table9.rows[2], table9.rows[3], table9.rows[4]
         row3.cells[1].text, row4.cells[1].text, row5.cells[1].text = 'кДж', 'м', 'м'
 
+        fence_retention = FistPage.get_fence().retention_capacity
+        ud = cls.result.get(parameter_id="Удерживающая способ")
+        row3.cells[2].text = f'{fence_retention}    ({ud.actual_value} кДж)'
+        row3.cells[3].text = f'{fence_retention}    ({ud.actual_value} кДж)'
+
+        ls = cls.result.filter(parameter_id='Остаточный прогиб')
+
+        if ls[0].test_id % 2 == 0:
+            row4.cells[2].text = str(ls[1].actual_value)
+            row4.cells[3].text = str(ls[0].actual_value)
+        else:
+            row4.cells[2].text = str(ls[0].actual_value)
+            row4.cells[3].text = str(ls[1].actual_value)
+
+        work_width = cls.result.filter(parameter_id="Рабочая ширина")
+
+
+        if work_width[0].test_id % 2 == 0:
+            row5.cells[2].text = str(work_width[1].actual_value)
+            row5.cells[3].text = str(work_width[0].actual_value)
+        else:
+            row5.cells[2].text = str(work_width[0].actual_value)
+            row5.cells[3].text = str(work_width[1].actual_value)
+
+
         cls.save_file()
 
     @classmethod
@@ -225,9 +278,6 @@ class Table:
     @staticmethod
     def save_file():
         doc.save('static/empty_report1.docx')
-
-
-
 
 
 

@@ -3,19 +3,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Протокол</title>
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
 </head>
 <body>
+<div class="container">
+    <h1>Поиск испытания</h1>
     <form action="{% url 'report:home' %}" method="post">
            {% csrf_token %}
-     <div>
          <label for="{{ form.marking.id_for_label }}">
          </label>
                     {{ form.marking }}
-     </div>
 
         <button type="submit" src="{% url 'report:home' %}">Создать отчет</button>
-</form>
+
+    </form>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        {{ form.media.js }}
+
+</div>
 
 </body>
 </html>

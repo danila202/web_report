@@ -15,6 +15,13 @@ style.font.size = Pt(14)
 class FistPage:
 
     @classmethod
+    def fill_number_protocol(cls):
+        p = doc.paragraphs[14]
+        fence = cls.get_fence()
+        run = p.add_run(f'{fence.id}')
+        cls.custom_style(run)
+
+    @classmethod
     def fill_customer(cls):
         p = doc.paragraphs[16]
         fence = cls.get_fence()
@@ -57,16 +64,6 @@ class FistPage:
                         f'{date_end.day}.{date_end.month}.{date_end.year} г')
         cls.custom_style(run)
 
-    @classmethod
-    def execute(cls):
-        cls.fill_customer()
-        cls.fill_fence()
-        cls.fill_manufacturer()
-        cls.fill_date_of_receipt()
-        cls.fill_date_of_test()
-        doc.save('static/empty_report1.docx')
-
-
     @staticmethod
     def get_fence():
         fence = Fence.objects.get(marking=Marking.objects.last().marking)
@@ -78,7 +75,14 @@ class FistPage:
         run.font.underline = WD_UNDERLINE.DOUBLE
         doc.save('static/empty_report1.docx')
 
-
-
+    @classmethod
+    def execute(cls):
+        cls.fill_number_protocol()
+        cls.fill_customer()
+        cls.fill_fence()
+        cls.fill_manufacturer()
+        cls.fill_date_of_receipt()
+        cls.fill_date_of_test()
+        doc.save('static/empty_report1.docx')
 
 

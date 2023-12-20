@@ -3,11 +3,11 @@ from django_select2 import forms as s2forms
 from django import forms
 
 
-
 class FenceWidget(s2forms.ModelSelect2Widget):
     search_fields = [
         'marking_icontains',
     ]
+
 
 class FencingForm(forms.ModelForm):
 
